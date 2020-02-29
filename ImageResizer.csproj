@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <UserSecretsId>d4ff315e8a13946bc9655b2cb89c75cf</UserSecretsId>
+  </PropertyGroup>
+  <ItemGroup></ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Magick.NET-Q16-x86" Version="7.15.3" />
+  </ItemGroup>
+</Project>
