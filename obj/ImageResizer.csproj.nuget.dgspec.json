@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "d:\\Projetos\\GIT\\ImageResizer\\ImageResizer.csproj": {}
+    "D:\\Projetos\\GIT\\ImageResizer\\ImageResizer.csproj": {}
   },
   "projects": {
-    "d:\\Projetos\\GIT\\ImageResizer\\ImageResizer.csproj": {
+    "D:\\Projetos\\GIT\\ImageResizer\\ImageResizer.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "d:\\Projetos\\GIT\\ImageResizer\\ImageResizer.csproj",
+        "projectUniqueName": "D:\\Projetos\\GIT\\ImageResizer\\ImageResizer.csproj",
         "projectName": "ImageResizer",
-        "projectPath": "d:\\Projetos\\GIT\\ImageResizer\\ImageResizer.csproj",
+        "projectPath": "D:\\Projetos\\GIT\\ImageResizer\\ImageResizer.csproj",
         "packagesPath": "C:\\Users\\mwbrito\\.nuget\\packages\\",
-        "outputPath": "d:\\Projetos\\GIT\\ImageResizer\\obj\\",
+        "outputPath": "D:\\Projetos\\GIT\\ImageResizer\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\mwbrito\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -41,6 +41,10 @@
             "Magick.NET-Q16-x86": {
               "target": "Package",
               "version": "[7.15.3, )"
+            },
+            "WindowsAzure.Storage": {
+              "target": "Package",
+              "version": "[9.3.3, )"
             }
           },
           "imports": [

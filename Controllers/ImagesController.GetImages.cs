@@ -11,7 +11,7 @@ namespace ImageResizer.Controllers
         [Route("api/images")]
         public async Task<IActionResult> GetImages(
             [FromQuery]string name,
-            [FromServices]IHostingEnvironment env
+            [FromServices]IWebHostEnvironment env
         )
         {
             var filePath = Path.Combine(env.ContentRootPath, "images", name);

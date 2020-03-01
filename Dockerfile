@@ -1,4 +1,7 @@
 FROM mcr.microsoft.com/dotnet/core/aspnet:3.0 AS base
+RUN apt-get update \
+    && apt-get install -y imagemagick \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 EXPOSE 80
 EXPOSE 443

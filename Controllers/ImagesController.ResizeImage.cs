@@ -3,9 +3,9 @@ using System.Threading.Tasks;
 using ImageMagick;
 using ImageResizer.Converter;
 using ImageResizer.Models;
+using ImageResizer.Storage;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-
 
 namespace ImageResizer.Controllers
 {
@@ -14,7 +14,9 @@ namespace ImageResizer.Controllers
         [Route("api/images/resize")]
         public async Task<IActionResult> ResizeImage(
             [FromQuery]ResizeRequestModel requestModel,
-            [FromServices]IHostingEnvironment env
+            [FromServices]IWebHostEnvironment env,
+            [FromServices]StorageService storage,
+            [FromServices]ImageConverter converter
         )
         {
             if(!ModelState.IsValid)
@@ -22,27 +24,22 @@ namespace ImageResizer.Controllers
                 return BadRequest(ModelState);
             }
 
-            var filePath = Path.Combine(env.ContentRootPath, "images", requestModel.Name);
-            var fileExists = System.IO.File.Exists(filePath);
+            (var fileExists, var blobFile) = await storage.TryGetFile(requestModel.Name);
             if(! fileExists)
             {
                 return NotFound();
             }
 
             var options = ConversionOptionsFactory.FromResizeRequest(requestModel);
+            var imageSource = await storage.GetBlobBytes(blobFile);
+            var result = await converter.Convert(imageSource, options);
 
-            using (var memory = new MemoryStream())
-            using(var image = new MagickImage(filePath))
+            if(result.Length ==0)
             {
-                image.Resize(options.Width, options.Height);
-                image.Strip();
-                image.Quality = options.Quality;
-                image.Format = options.TargetFormat;
-
-                image.Write(memory);
-                var file = memory.ToArray();
-                return File(file, options.TargetMimeType);
+                return BadRequest("Couldn't convert file.");
             }
+
+            return File(result, options.TargetMimeType);
 
         }    
     }
