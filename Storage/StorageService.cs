@@ -19,26 +19,60 @@ namespace ImageResizer.Storage
             _client = client;
             _logger = logger;
         }
+
         public async Task<(bool, CloudBlockBlob)> TryGetFile(string name)
+        {
+            return await TryGetFile(_configuration["StorageAccount:Conteiner"], name);
+        }
+        
+        public async Task<(bool, CloudBlockBlob)> TryGetFileCached(string name)
+        {
+            return await TryGetFile(_configuration["StorageAccount:ConteinerResized"], name);
+        }
+
+        public async Task<(bool, CloudBlockBlob)> TryUploadToCache(string name, byte[] imageContent, string mimeType)
         {
             try
             {
-                var conteiner = _client.GetContainerReference(_configuration["StorageAccount:Conteiner"]);
-                var blob = conteiner.GetBlockBlobReference(name);
+                var cacheBlob = GetFile(_configuration["StorageAccount:ConteinerResized"], name);
+                await cacheBlob.UploadFromByteArrayAsync(imageContent, 0, imageContent.Length);
+
+                cacheBlob.Properties.ContentType = mimeType;
+                await cacheBlob.SetPropertiesAsync();
+
+                return (true, cacheBlob);
+            }
+            catch (Exception ex)
+            {                
+                _logger.LogError(ex, $"Could not upload file {name}");            
+            }
+
+            return (false, null);
+        }
+
+        private async Task<(bool, CloudBlockBlob)> TryGetFile(string container, string name)
+        {
+            try
+            {
+                var blob = GetFile(container, name);
                 
                 if (await blob.ExistsAsync())
                 {
                     return (true, blob);
                 }
-
             }
             catch (Exception ex)
-            {
-                
+            {                
                 _logger.LogError(ex, $"Could not download file {name}");
             }
 
             return (false, null);
+        }
+
+        private CloudBlockBlob GetFile(string conteinerName, string blobName)
+        {
+                            var conteiner = _client.GetContainerReference(conteinerName);
+                return conteiner.GetBlockBlobReference(blobName);
         }
 
         public async Task<byte[]> GetBlobBytes(CloudBlockBlob blob)

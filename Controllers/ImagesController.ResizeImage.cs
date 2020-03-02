@@ -1,11 +1,11 @@
-using System.IO;
 using System.Threading.Tasks;
-using ImageMagick;
 using ImageResizer.Converter;
 using ImageResizer.Models;
 using ImageResizer.Storage;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Net.Http.Headers;
 
 namespace ImageResizer.Controllers
 {
@@ -24,13 +24,25 @@ namespace ImageResizer.Controllers
                 return BadRequest(ModelState);
             }
 
+            var options = ConversionOptionsFactory.FromResizeRequest(requestModel);
+
+            (var cacheExists, var cacheFile) = await storage.TryGetFileCached(requestModel.Name);
+            if(cacheExists)
+            {
+                if(IsEtagNotModified(Request, cacheFile.Properties.ETag))
+                {
+                    return new NotModifiedResult(cacheFile.Properties.LastModified.GetValueOrDefault().UtcDateTime, cacheFile.Properties.ETag);
+                }
+                var cacheContent = await storage.GetBlobBytes(cacheFile);
+                return File(cacheContent, cacheFile.Properties.ContentType, cacheFile.Properties.LastModified.GetValueOrDefault().UtcDateTime, new EntityTagHeaderValue(cacheFile.Properties.ETag));
+            }
+
             (var fileExists, var blobFile) = await storage.TryGetFile(requestModel.Name);
             if(! fileExists)
             {
                 return NotFound();
             }
-
-            var options = ConversionOptionsFactory.FromResizeRequest(requestModel);
+            
             var imageSource = await storage.GetBlobBytes(blobFile);
             var result = await converter.Convert(imageSource, options);
 
@@ -39,8 +51,16 @@ namespace ImageResizer.Controllers
                 return BadRequest("Couldn't convert file.");
             }
 
-            return File(result, options.TargetMimeType);
+            (var uplaodOk, var savedFile) = await storage.TryUploadToCache(options.GetCacheKey(), result, options.TargetMimeType);
 
-        }    
+            return File(result, savedFile.Properties.ContentType, cacheFile.Properties.LastModified.GetValueOrDefault().UtcDateTime, new EntityTagHeaderValue(cacheFile.Properties.ETag));
+        }
+
+        static bool IsEtagNotModified(HttpRequest request, string etag)
+        {
+            var requestHeaders = request ? .GetTypedHeaders();
+
+            return requestHeaders?.IfNoneMatch != null && requestHeaders.IfNoneMatch.Contains(new EntityTagHeaderValue(etag));
+        }
     }
 }
